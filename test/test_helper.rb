@@ -128,7 +128,7 @@ class Vote < ActiveRecord::Base
 end
 
 class Item < ActiveRecord::Base
-  # This is default, however because of random test run ordering we need to be explicit
+  # This is default, however because the setting is app-wide, and changed elsewhere, we need to be explicit
   ThumbsUp.configuration.voteable_relationship_name = :votes
   ThumbsUp.configuration.voter_relationship_name = :votes
   acts_as_voteable
@@ -136,7 +136,7 @@ class Item < ActiveRecord::Base
 end
 
 class OtherItem < ActiveRecord::Base
-  # This is default, however because of random test run ordering we need to be explicit
+  # This is default, however because the setting is app-wide, and changed elsewhere, we need to be explicit
   ThumbsUp.configuration.voteable_relationship_name = :votes
   ThumbsUp.configuration.voter_relationship_name = :votes
   acts_as_voteable
@@ -144,7 +144,7 @@ class OtherItem < ActiveRecord::Base
 end
 
 class User < ActiveRecord::Base
-  # This is default, however because of random test run ordering we need to be explicit
+  # This is default, however because the setting is app-wide, and changed elsewhere, we need to be explicit
   ThumbsUp.configuration.voteable_relationship_name = :votes
   ThumbsUp.configuration.voter_relationship_name = :votes
   acts_as_voter
