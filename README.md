@@ -88,6 +88,11 @@ Did the first user vote for or against the Car with id = 2?
     u.voted_for?(Car.find(2)) #=> true
     u.voted_against?(Car.find(2)) #=> false
 
+Or check directly!
+
+    u = User.first
+    u.voted_how?(Car.find(2)) #=> true
+
 #### Tallying Votes
 
 You can easily retrieve voteable object collections based on the properties of their votes:
