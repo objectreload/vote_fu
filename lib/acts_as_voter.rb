@@ -116,6 +116,16 @@ module ThumbsUp #:nodoc:
             ).count
       end
 
+      def voted_how?(voteable)
+         Vote.where(
+              :voter_id => self.id,
+              :voter_type => self.class.base_class.name,
+              :voteable_id => voteable.id,
+              :voteable_type => voteable.class.base_class.name
+            )
+
+      end
+
     end
   end
 end
