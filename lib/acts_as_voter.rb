@@ -125,6 +125,8 @@ module ThumbsUp #:nodoc:
             ).map(&:vote) #in case votes is premitted to be duplicated
         if votes.count == 1
           votes.first
+        elsif votes.count == 0
+          nil
         else
           votes
         end
