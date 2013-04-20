@@ -140,7 +140,9 @@ class TestThumbsUp < Test::Unit::TestCase
 
   def test_tally_empty
     item = Item.create(:name => 'XBOX', :description => 'XBOX console')
-    assert_equal 0, Item.tally.having('vote_count > 0').length
+    # COUNT(#{Vote.table_name}.id) is equivalent to aliased column `vote_count` - Postgres
+    # requires the non-aliased name in a HAVING clause.
+    assert_equal 0, Item.tally.having("COUNT(#{Vote.table_name}.id) > 0").length
   end
 
   def test_tally_has_id
@@ -202,10 +204,6 @@ class TestThumbsUp < Test::Unit::TestCase
     Item.tally.except(:order).any?
   end
 
-  def test_tally_empty
-    Item.tally.except(:order).empty?
-  end
-
   def test_plusminus_tally_not_empty_without_conditions
     item = Item.create(:name => 'XBOX', :description => 'XBOX console')
     assert_equal 1, Item.plusminus_tally.length
@@ -213,7 +211,9 @@ class TestThumbsUp < Test::Unit::TestCase
 
   def test_plusminus_tally_empty
     item = Item.create(:name => 'XBOX', :description => 'XBOX console')
-    assert_equal 0, Item.plusminus_tally.having('vote_count > 0').length
+    # COUNT(#{Vote.table_name}.id) is equivalent to aliased column `vote_count` - Postgres
+    # requires the non-aliased name in a HAVING clause.
+    assert_equal 0, Item.plusminus_tally.having("COUNT(#{Vote.table_name}.id) > 0").length
   end
 
   def test_plusminus_tally_starts_at
@@ -388,10 +388,6 @@ class TestThumbsUp < Test::Unit::TestCase
 
   def test_plusminus_tally_any
     Item.plusminus_tally.except(:order).any?
-  end
-
-  def test_plusminus_tally_empty
-    Item.plusminus_tally.except(:order).empty?
   end
 
   def test_karma
