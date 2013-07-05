@@ -152,7 +152,7 @@ class TestThumbsUp < Test::Unit::TestCase
 
     user.vote_for(item2)
 
-    assert_not_nil Item.tally.all.first.id
+    assert_not_nil Item.tally.first.id
   end
 
   def test_tally_starts_at
@@ -407,8 +407,8 @@ class TestThumbsUp < Test::Unit::TestCase
     user.vote_for(item)
     user.vote_for(another_item)
 
-    assert_equal 1, Item.plusminus_tally.sum(&:plusminus_tally).to_i
-    assert_equal 1, OtherItem.plusminus_tally.sum(&:plusminus_tally).to_i
+    assert_equal 1, Item.plusminus_tally.to_a.sum(&:plusminus_tally).to_i
+    assert_equal 1, OtherItem.plusminus_tally.to_a.sum(&:plusminus_tally).to_i
   end
 
 end
