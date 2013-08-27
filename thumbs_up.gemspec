@@ -17,7 +17,11 @@ Gem::Specification.new do |s|
   s.files = Dir.glob('{lib,rails,test}/**/*') + %w(CHANGELOG.md Gemfile MIT-LICENSE README.md Rakefile)
   s.require_paths = ['lib']
 
-  s.add_runtime_dependency('activerecord')
+  if RUBY_VERSION < '1.9.3'
+    s.add_runtime_dependency('activerecord', '< 4.0.0')
+  else
+    s.add_runtime_dependency('activerecord')
+  end
   s.add_runtime_dependency('statistics2')
   s.add_development_dependency('simplecov')
   s.add_development_dependency('bundler')
