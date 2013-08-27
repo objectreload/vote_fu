@@ -1,7 +1,7 @@
 ThumbsUp
 =======
 
-[![Build Status](https://secure.travis-ci.org/bouchard/thumbs_up.png)](http://travis-ci.org/bouchard/thumbs_up)
+[![Build Status](https://secure.travis-ci.org/bouchard/thumbs_up.png)](http://travis-ci.org/bouchard/thumbs_up) [![Code Climate](https://codeclimate.com/github/bouchard/thumbs_up.png)](https://codeclimate.com/github/bouchard/thumbs_up)
 
 **Note: Version 0.5.x is a breaking change for #plusminus_tally and #tally, with > 50% speedups.**
 
@@ -87,7 +87,7 @@ Usage
     voter.vote_exclusively_for(voteable)	# Removes any previous votes by that particular voter, and votes for.
     voter.vote_exclusively_against(voteable)	# Removes any previous votes by that particular voter, and votes against.
 
-    vote.unvote_for(voteable)  # Clears all votes for that user
+    voter.unvote_for(voteable)  # Clears all votes for that user
 
 ### Querying votes
 
@@ -103,6 +103,22 @@ Did the first user vote for or against the Car with id = 2?
     u.vote_for(Car.find(2))
     u.voted_for?(Car.find(2)) #=> true
     u.voted_against?(Car.find(2)) #=> false
+
+Or check directly!
+
+    u = User.first
+    u.vote_for(Car.find(2))
+    u.voted_how?(Car.find(2)) #=> true, if voted_for
+
+    u.vote_against(Car.find(3))
+    u.voted_how?(Car.find(3)) #=> false, if voted_against
+
+    u.vote_for(Car.find(4))
+    u.voted_how?(Car.find(4)) #=> nil, if didn't vote for it
+
+in case you use `--unique-voting false` (documented below):
+
+    u.voted_how?(Car.find(2)) #=> [false, true, true, false]
 
 #### Tallying Votes
 

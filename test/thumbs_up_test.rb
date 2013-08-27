@@ -15,6 +15,7 @@ class TestThumbsUp < Test::Unit::TestCase
     user_for = User.create(:name => 'david')
     user_against = User.create(:name => 'brady')
     item = Item.create(:name => 'XBOX', :description => 'XBOX console')
+    item2= Item.create(:name => 'PS3', :description => 'Playstation 3')
 
     assert_not_nil user_for.vote_for(item)
     assert_raises(ActiveRecord::RecordInvalid) do
@@ -28,6 +29,7 @@ class TestThumbsUp < Test::Unit::TestCase
     assert_equal 0, user_for.vote_count(:down)
     assert_equal true, user_for.voted_which_way?(item, :up)
     assert_equal false, user_for.voted_which_way?(item, :down)
+    assert_equal true, user_for.voted_how?(item)
     assert_equal 1, user_for.votes.where(:voteable_type => 'Item').count
     assert_equal 0, user_for.votes.where(:voteable_type => 'AnotherItem').count
     assert_raises(ArgumentError) do
@@ -40,6 +42,7 @@ class TestThumbsUp < Test::Unit::TestCase
     end
     assert_equal false, user_against.voted_for?(item)
     assert_equal true, user_against.voted_against?(item)
+    assert_equal false, user_against.voted_how?(item)
     assert_equal true, user_against.voted_on?(item)
     assert_equal 1, user_against.vote_count
     assert_equal 0, user_against.vote_count(:up)
@@ -65,6 +68,18 @@ class TestThumbsUp < Test::Unit::TestCase
     assert_raises(ArgumentError) do
       user_for.vote(item, {:direction => :foo})
     end
+
+    vote = user_against.vote(item, :exclusive => true, :direction => :down)
+    assert_equal true, user_against.voted_against?(item)
+    # Make sure the vote record was returned by the :vote method
+    assert_equal true, vote.is_a?(Vote)
+
+    vote = user_for.vote(item, :exclusive => true, :direction => :up)
+    assert_equal true, user_for.voted_for?(item)
+    # Make sure the vote record was returned by the :vote method
+    assert_equal true, vote.is_a?(Vote)
+
+    assert_nil user_for.voted_how?(item2)
   end
 
   def test_acts_as_voteable_instance_methods
@@ -266,7 +281,9 @@ class TestThumbsUp < Test::Unit::TestCase
   # Duplicated method name, why?
   def test_tally_empty
     item = Item.create(:name => 'XBOX', :description => 'XBOX console')
-    assert_equal 0, Item.tally.having('vote_count > 0').length
+    # COUNT(#{Vote.table_name}.id) is equivalent to aliased column `vote_count` - Postgres
+    # requires the non-aliased name in a HAVING clause.
+    assert_equal 0, Item.tally.having("COUNT(#{Vote.table_name}.id) > 0").length
   end
 
   def test_tally_has_id
@@ -276,7 +293,7 @@ class TestThumbsUp < Test::Unit::TestCase
 
     user.vote_for(item2)
 
-    assert_not_nil Item.tally.all.first.id
+    assert_not_nil Item.tally.first.id
   end
 
   def test_tally_starts_at
@@ -328,20 +345,16 @@ class TestThumbsUp < Test::Unit::TestCase
     Item.tally.except(:order).any?
   end
 
-  # Duplicated method name, why?
-  def test_tally_empty
-    Item.tally.except(:order).empty?
-  end
-
   def test_plusminus_tally_not_empty_without_conditions
     item = Item.create(:name => 'XBOX', :description => 'XBOX console')
     assert_equal 1, Item.plusminus_tally.length
   end
 
-  # Duplicated method name, why?
   def test_plusminus_tally_empty
     item = Item.create(:name => 'XBOX', :description => 'XBOX console')
-    assert_equal 0, Item.plusminus_tally.having('vote_count > 0').length
+    # COUNT(#{Vote.table_name}.id) is equivalent to aliased column `vote_count` - Postgres
+    # requires the non-aliased name in a HAVING clause.
+    assert_equal 0, Item.plusminus_tally.having("COUNT(#{Vote.table_name}.id) > 0").length
   end
 
   def test_plusminus_tally_starts_at
@@ -393,11 +406,11 @@ class TestThumbsUp < Test::Unit::TestCase
     assert_not_nil user.vote_for(item)
 
     if ActiveRecord::Base.connection.adapter_name == 'MySQL'
-      assert (Item.plusminus_tally.having('vote_count > 0').include? item)
-      assert (not Item.plusminus_tally.having('vote_count > 0').include? item_not_included)
+      assert(Item.plusminus_tally.having('vote_count > 0').include?(item))
+      assert(!Item.plusminus_tally.having('vote_count > 0').include?(item_not_included))
     else
-      assert (Item.plusminus_tally.having('COUNT(votes.id) > 0').include? item)
-      assert (not Item.plusminus_tally.having('COUNT(votes.id) > 0').include? item_not_included)
+      assert(Item.plusminus_tally.having('COUNT(votes.id) > 0').include?(item))
+      assert(!Item.plusminus_tally.having('COUNT(votes.id) > 0').include?(item_not_included))
     end
   end
 
@@ -518,11 +531,6 @@ class TestThumbsUp < Test::Unit::TestCase
     Item.plusminus_tally.except(:order).any?
   end
 
-  # Duplicated method name, why?
-  def test_plusminus_tally_empty
-    Item.plusminus_tally.except(:order).empty?
-  end
-
   def test_karma
     users = (0..1).map{ |u| User.create(:name => "User #{u}") }
     items = (0..1).map{ |u| users[0].items.create(:name => "Item #{u}", :description => "Item #{u}") }
@@ -540,8 +548,8 @@ class TestThumbsUp < Test::Unit::TestCase
     user.vote_for(item)
     user.vote_for(another_item)
 
-    assert_equal 1, Item.plusminus_tally.sum(&:plusminus_tally).to_i
-    assert_equal 1, OtherItem.plusminus_tally.sum(&:plusminus_tally).to_i
+    assert_equal 1, Item.plusminus_tally.to_a.sum(&:plusminus_tally).to_i
+    assert_equal 1, OtherItem.plusminus_tally.to_a.sum(&:plusminus_tally).to_i
   end
 
 end

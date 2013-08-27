@@ -88,7 +88,10 @@ module ThumbsUp #:nodoc:
           self.unvote_for(voteable)
         end
         direction = (options[:direction].to_sym == :up)
-        Vote.create!(:vote => direction, :voteable => voteable, :voter => self)
+        # create! does not return the created object
+        v = Vote.new(:vote => direction, :voteable => voteable, :voter => self)
+        v.save!
+        v
       end
 
       def unvote_for(voteable)
@@ -111,6 +114,22 @@ module ThumbsUp #:nodoc:
               :voteable_id => voteable.id,
               :voteable_type => voteable.class.base_class.name
             ).count
+      end
+
+      def voted_how?(voteable)
+        votes = Vote.where(
+              :voter_id => self.id,
+              :voter_type => self.class.base_class.name,
+              :voteable_id => voteable.id,
+              :voteable_type => voteable.class.base_class.name
+            ).map(&:vote) #in case votes is premitted to be duplicated
+        if votes.count == 1
+          votes.first
+        elsif votes.count == 0
+          nil
+        else
+          votes
+        end
       end
 
     end
