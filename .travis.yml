@@ -5,4 +5,4 @@ rvm:
   - 1.9.3
 before_script:
   - "mysql -e 'create database thumbs_up_test;'"
-  - "bundle update;'"
+  - "bundle update"
