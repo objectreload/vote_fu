@@ -540,6 +540,28 @@ class TestThumbsUp < Test::Unit::TestCase
     assert_equal 0, users[1].karma
   end
 
+  def test_karma_with_upvote_weights
+    User.upvote_only_has_karma
+    users = (0..1).map{ |u| User.create(:name => "User #{u}") }
+    items = (0..1).map{ |u| users[0].items.create(:name => "Item #{u}", :description => "Item #{u}") }
+    users.each{ |u| items.each { |i| u.vote_for(i) } }
+
+    assert_equal (4 * 1.3).round, users[0].karma
+    assert_equal 0, users[1].karma
+  end
+
+  def test_karma_with_both_upvote_and_downvote_weights
+    User.weighted_has_karma
+    for_users = (0..1).map{ |u| User.create(:name => "For User #{u}") }
+    against_users = (0..2).map{ |u| User.create(:name => "Against User #{u}") }
+    items = (0..1).map{ |u| for_users[0].items.create(:name => "Item #{u}", :description => "Item #{u}") }
+    for_users.each{ |u| items.each { |i| u.vote_for(i) } }
+    against_users.each{ |u| items.each { |i| u.vote_against(i) } }
+
+    assert_equal 2 * (10 * 2 - 15 * 3).round, for_users[0].karma
+    assert_equal 0, for_users[1].karma
+  end
+
   def test_plusminus_tally_scopes_by_voteable_type
     user = User.create(:name => 'david')
     item = Item.create(:name => 'XBOX', :description => 'XBOX console')
