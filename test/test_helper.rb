@@ -150,6 +150,16 @@ class User < ActiveRecord::Base
   acts_as_voter
   has_many :items
   has_karma(:items)
+
+  def self.weighted_has_karma
+    self.karmic_objects = nil
+    has_karma :items, :weight => [ 10, 15 ]
+  end
+
+  def self.upvote_only_has_karma
+    self.karmic_objects = nil
+    has_karma :items, :weight => 1.3
+  end
 end
 
 class ItemCustom < ActiveRecord::Base
@@ -172,16 +182,6 @@ class UserCustom < ActiveRecord::Base
   acts_as_voter
   has_many :items
   has_karma :items
-
-  def self.weighted_has_karma
-    self.karmic_objects = nil
-    has_karma :items, :weight => [ 10, 15 ]
-  end
-
-  def self.upvote_only_has_karma
-    self.karmic_objects = nil
-    has_karma :items, :weight => 1.3
-  end
 end
 
 class Test::Unit::TestCase
