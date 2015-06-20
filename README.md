@@ -23,28 +23,31 @@ Installation
 ============
 
 ### Require the gem:
-
-    gem 'thumbs_up'
+```shell
+gem 'thumbs_up'
+```
 
 ### Create and run the ThumbsUp migration:
-
-    rails generate thumbs_up
-    rake db:migrate
+```shell
+rails generate thumbs_up
+rake db:migrate
+```
 
 Configuration
 =============
 
 The relationship setup by the acts_as_voteable and acts_as_voter mixins both default to `votes`.  This causes one to obscure the other if you have a single class that votes on other instances of the same class.  If you have this scenario:
-
-    class User < ActiveRecord::Base
-      acts_as_voter     # relationship :votes will be obscured by the same named relationship from acts_as_voteable :(
-      acts_as_voteable
-    end
-
+```ruby
+class User < ActiveRecord::Base
+  acts_as_voter     # relationship :votes will be obscured by the same named relationship from acts_as_voteable :(
+  acts_as_voteable
+end
+```
 Configure alternate relationship names in an initializer at `config/initializers/thumbs_up.rb`:
-
-    ThumbsUp.configuration.voteable_relationship_name = :votes_on   # defaults to :votes
-    ThumbsUp.configuration.voter_relationship_name =    :votes_by   # defaults to :votes
+```ruby
+ThumbsUp.configuration.voteable_relationship_name = :votes_on   # defaults to :votes
+ThumbsUp.configuration.voter_relationship_name =    :votes_by   # defaults to :votes
+```
 
 
 Usage
@@ -53,84 +56,94 @@ Usage
 ## Getting Started
 
 ### Turn your AR models into something that can be voted upon.
+```ruby
+class SomeModel < ActiveRecord::Base
+  acts_as_voteable
+end
 
-    class SomeModel < ActiveRecord::Base
-      acts_as_voteable
-    end
-
-    class Question < ActiveRecord::Base
-      acts_as_voteable
-    end
+class Question < ActiveRecord::Base
+  acts_as_voteable
+end
+```
 
 ### Turn your Users (or any other model) into voters.
+```ruby
+class User < ActiveRecord::Base
+  acts_as_voter
+  # The following line is optional, and tracks karma (up votes) for questions this user has submitted.
+  # Each question has a submitter_id column that tracks the user who submitted it.
+  # The option :weight value will be multiplied to any karma from that voteable model (defaults to 1).
+  # You can track any voteable model.
+  has_karma :questions, :as => :submitter, :weight => 0.5
+  # Karma by default is only calculated from upvotes. If you pass an array to the weight option, you can count downvotes as well (below, downvotes count for half as much karma against you):
+  has_karma :questions, :as => :submitter, :weight => [ 1, 0.5 ]
+end
 
-    class User < ActiveRecord::Base
-      acts_as_voter
-      # The following line is optional, and tracks karma (up votes) for questions this user has submitted.
-      # Each question has a submitter_id column that tracks the user who submitted it.
-      # The option :weight value will be multiplied to any karma from that voteable model (defaults to 1).
-      # You can track any voteable model.
-      has_karma :questions, :as => :submitter, :weight => 0.5
-      # Karma by default is only calculated from upvotes. If you pass an array to the weight option, you can count downvotes as well (below, downvotes count for half as much karma against you):
-      has_karma :questions, :as => :submitter, :weight => [ 1, 0.5 ]
-    end
-
-    class Robot < ActiveRecord::Base
-      acts_as_voter
-    end
+class Robot < ActiveRecord::Base
+  acts_as_voter
+end
+```
 
 ### To cast a vote for a Model you can do the following:
 
 #### Shorthand syntax
-    voter.vote_for(voteable)     	# Adds a +1 vote
-    voter.vote_against(voteable) 	# Adds a -1 vote
-    voter.vote(voteable, vote) 	# Adds either a +1 or -1 vote: vote => true (+1), vote => false (-1)
+```ruby
+voter.vote_for(voteable)     	# Adds a +1 vote
+voter.vote_against(voteable) 	# Adds a -1 vote
+voter.vote(voteable, vote) 	# Adds either a +1 or -1 vote: vote => true (+1), vote => false (-1)
 
-    voter.vote_exclusively_for(voteable)	# Removes any previous votes by that particular voter, and votes for.
-    voter.vote_exclusively_against(voteable)	# Removes any previous votes by that particular voter, and votes against.
+voter.vote_exclusively_for(voteable)	# Removes any previous votes by that particular voter, and votes for.
+voter.vote_exclusively_against(voteable)	# Removes any previous votes by that particular voter, and votes against.
 
-    voter.unvote_for(voteable)  # Clears all votes for that user
+voter.unvote_for(voteable)  # Clears all votes for that user
+```
 
 ### Querying votes
 
 Did the first user vote for the Car with id = 2 already?
-
-    u = User.first
-    u.vote_for(Car.find(2))
-    u.voted_on?(Car.find(2)) #=> true
+```ruby
+u = User.first
+u.vote_for(Car.find(2))
+u.voted_on?(Car.find(2)) #=> true
+```
 
 Did the first user vote for or against the Car with id = 2?
-
-    u = User.first
-    u.vote_for(Car.find(2))
-    u.voted_for?(Car.find(2)) #=> true
-    u.voted_against?(Car.find(2)) #=> false
+```ruby
+u = User.first
+u.vote_for(Car.find(2))
+u.voted_for?(Car.find(2)) #=> true
+u.voted_against?(Car.find(2)) #=> false
+```
 
 Or check directly!
+```ruby
+u = User.first
+u.vote_for(Car.find(2))
+u.voted_how?(Car.find(2)) #=> true, if voted_for
 
-    u = User.first
-    u.vote_for(Car.find(2))
-    u.voted_how?(Car.find(2)) #=> true, if voted_for
+u.vote_against(Car.find(3))
+u.voted_how?(Car.find(3)) #=> false, if voted_against
 
-    u.vote_against(Car.find(3))
-    u.voted_how?(Car.find(3)) #=> false, if voted_against
-
-    u.vote_for(Car.find(4))
-    u.voted_how?(Car.find(4)) #=> nil, if didn't vote for it
+u.vote_for(Car.find(4))
+u.voted_how?(Car.find(4)) #=> nil, if didn't vote for it
+```
 
 in case you use `--unique-voting false` (documented below):
-
-    u.voted_how?(Car.find(2)) #=> [false, true, true, false]
+```ruby
+u.voted_how?(Car.find(2)) #=> [false, true, true, false]
+```
 
 #### Tallying Votes
 
 You can easily retrieve voteable object collections based on the properties of their votes:
-
-    @items = Item.tally.limit(10).where('created_at > ?', 2.days.ago).having('COUNT(votes.id) < 10')
+```ruby
+@items = Item.tally.limit(10).where('created_at > ?', 2.days.ago).having('COUNT(votes.id) < 10')
+```
 
 Or for MySQL:
-
-    @items = Item.tally.limit(10).where('created_at > ?', 2.days.ago).having('vote_count < 10')
+```ruby
+@items = Item.tally.limit(10).where('created_at > ?', 2.days.ago).having('vote_count < 10')
+```
 
 This will select the Items with less than 10 votes, the votes having been cast within the last two days, with a limit of 10 items. *This tallies all votes, regardless of whether they are +1 (up) or -1 (down).* The #tally method returns an ActiveRecord Relation, so you can chain the normal method calls on to it.
 
@@ -139,21 +152,23 @@ This will select the Items with less than 10 votes, the votes having been cast w
 **You most likely want to use this over the normal tally**
 
 This is similar to tallying votes, but this will return voteable object collections based on the sum of the differences between up and down votes (ups are +1, downs are -1). For Instance, a voteable with 3 upvotes and 2 downvotes will have a plusminus_tally of 1.
-
-    @items = Item.plusminus_tally.limit(10).where('created_at > ?', 2.days.ago).having('plusminus_tally > 10')
+```ruby
+@items = Item.plusminus_tally.limit(10).where('created_at > ?', 2.days.ago).having('plusminus_tally > 10')
+```
 
 #### Lower level queries
+```ruby
+positiveVoteCount = voteable.votes_for
+negativeVoteCount = voteable.votes_against
+# Votes for minus votes against. If you want more than a few model instances' worth, use `plusminus_tally` instead.
+plusminus         = voteable.plusminus
 
-    positiveVoteCount = voteable.votes_for
-    negativeVoteCount = voteable.votes_against
-    # Votes for minus votes against. If you want more than a few model instances' worth, use `plusminus_tally` instead.
-    plusminus         = voteable.plusminus
+voter.voted_for?(voteable) # True if the voter voted for this object.
+voter.vote_count(:up | :down | :all) # returns the count of +1, -1, or all votes
 
-	voter.voted_for?(voteable) # True if the voter voted for this object.
-	voter.vote_count(:up | :down | :all) # returns the count of +1, -1, or all votes
-
-	voteable.voted_by?(voter) # True if the voter voted for this object.
-	@voters = voteable.voters_who_voted
+voteable.voted_by?(voter) # True if the voter voted for this object.
+@voters = voteable.voters_who_voted
+```
 
 
 ### One vote per user!
@@ -161,16 +176,18 @@ This is similar to tallying votes, but this will return voteable object collecti
 ThumbsUp by default only allows one vote per user. This can be changed by removing:
 
 #### In vote.rb:
-
-    validates_uniqueness_of :voteable_id, :scope => [:voteable_type, :voter_type, :voter_id]
+```ruby
+validates_uniqueness_of :voteable_id, :scope => [:voteable_type, :voter_type, :voter_id]
+```
 
 #### In the migration, the unique index:
-
-    add_index :votes, ["voter_id", "voter_type", "voteable_id", "voteable_type"], :unique => true, :name => "uniq_one_vote_only"
-
+```ruby
+add_index :votes, ["voter_id", "voter_type", "voteable_id", "voteable_type"], :unique => true, :name => "uniq_one_vote_only"
+```
 You can also use `--unique-voting false` when running the generator command:
-
-    rails generate thumbs_up --unique-voting false
+```shell
+rails generate thumbs_up --unique-voting false
+```
 
 #### Testing ThumbsUp
 
@@ -178,30 +195,30 @@ Testing is a bit more than trivial now as our #tally and #plusminus_tally querie
 
 * mysql
 
-    ```
-    $ mysql -uroot # You may have set a password locally. Change as needed.
-      > CREATE USER 'test'@'localhost' IDENTIFIED BY 'test';
-      > CREATE DATABASE thumbs_up_test;
-      > USE thumbs_up_test;
-      > GRANT ALL PRIVILEGES ON thumbs_up_test TO 'test'@'localhost' IDENTIFIED BY 'test';
-      > exit;
-    ```
+```sql
+$ mysql -uroot # You may have set a password locally. Change as needed.
+  > CREATE USER 'test'@'localhost' IDENTIFIED BY 'test';
+  > CREATE DATABASE thumbs_up_test;
+  > USE thumbs_up_test;
+  > GRANT ALL PRIVILEGES ON thumbs_up_test TO 'test'@'localhost' IDENTIFIED BY 'test';
+  > exit;
+```
 * Postgres
 
-    ```
-    $ psql # You may have set a password locally. Change as needed.
-      > CREATE ROLE test;
-      > ALTER ROLE test WITH SUPERUSER;
-      > ALTER ROLE test WITH LOGIN;
-      > CREATE DATABASE thumbs_up_test;
-      > GRANT ALL PRIVILEGES ON DATABASE thumbs_up_test to test;
-      > \q
-    ```
+```PLpgSQL
+$ psql # You may have set a password locally. Change as needed.
+  > CREATE ROLE test;
+  > ALTER ROLE test WITH SUPERUSER;
+  > ALTER ROLE test WITH LOGIN;
+  > CREATE DATABASE thumbs_up_test;
+  > GRANT ALL PRIVILEGES ON DATABASE thumbs_up_test to test;
+  > \q
+```
 * Run tests
 
-    ```
-    $ rake # Runs the test suite against all adapters.
-    ```
+```shell
+$ rake # Runs the test suite against all adapters.
+```
 
 Credits
 =======
