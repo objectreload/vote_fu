@@ -1,6 +1,6 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), 'test_helper')
 
-class TestThumbsUp < Test::Unit::TestCase
+class TestThumbsUp < Minitest::Test
   def setup
     Vote.delete_all
     User.delete_all
@@ -17,7 +17,7 @@ class TestThumbsUp < Test::Unit::TestCase
     item = Item.create(:name => 'XBOX', :description => 'XBOX console')
     item2= Item.create(:name => 'PS3', :description => 'Playstation 3')
 
-    assert_not_nil user_for.vote_for(item)
+    refute_nil user_for.vote_for(item)
     assert_raises(ActiveRecord::RecordInvalid) do
       user_for.vote_for(item)
     end
@@ -36,7 +36,7 @@ class TestThumbsUp < Test::Unit::TestCase
       user_for.voted_which_way?(item, :foo)
     end
 
-    assert_not_nil user_against.vote_against(item)
+    refute_nil user_against.vote_against(item)
     assert_raises(ActiveRecord::RecordInvalid) do
       user_against.vote_against(item)
     end
@@ -53,10 +53,10 @@ class TestThumbsUp < Test::Unit::TestCase
       user_against.voted_which_way?(item, :foo)
     end
 
-    assert_not_nil user_against.vote_exclusively_for(item)
+    refute_nil user_against.vote_exclusively_for(item)
     assert_equal true, user_against.voted_for?(item)
 
-    assert_not_nil user_for.vote_exclusively_against(item)
+    refute_nil user_for.vote_exclusively_against(item)
     assert_equal true, user_for.voted_against?(item)
 
     user_for.unvote_for(item)
@@ -159,7 +159,7 @@ class TestThumbsUp < Test::Unit::TestCase
       user_for.votes
     end
 
-    assert_not_nil user_for.vote_for(item)
+    refute_nil user_for.vote_for(item)
     assert_raises(ActiveRecord::RecordInvalid) do
       user_for.vote_for(item)
     end
@@ -177,7 +177,7 @@ class TestThumbsUp < Test::Unit::TestCase
       user_for.voted_which_way?(item, :foo)
     end
 
-    assert_not_nil user_against.vote_against(item)
+    refute_nil user_against.vote_against(item)
     assert_raises(ActiveRecord::RecordInvalid) do
       user_against.vote_against(item)
     end
@@ -193,10 +193,10 @@ class TestThumbsUp < Test::Unit::TestCase
       user_against.voted_which_way?(item, :foo)
     end
 
-    assert_not_nil user_against.vote_exclusively_for(item)
+    refute_nil user_against.vote_exclusively_for(item)
     assert_equal true, user_against.voted_for?(item)
 
-    assert_not_nil user_for.vote_exclusively_against(item)
+    refute_nil user_for.vote_exclusively_against(item)
     assert_equal true, user_for.voted_against?(item)
 
     user_for.unvote_for(item)
@@ -293,7 +293,7 @@ class TestThumbsUp < Test::Unit::TestCase
 
     user.vote_for(item2)
 
-    assert_not_nil Item.tally.first.id
+    refute_nil Item.tally.first.id
   end
 
   def test_tally_starts_at
@@ -338,7 +338,7 @@ class TestThumbsUp < Test::Unit::TestCase
   end
 
   def test_tally_count
-    Item.tally.except(:order).count
+    Item.tally.except(:order).to_a.count
   end
 
   def test_tally_any
@@ -403,7 +403,7 @@ class TestThumbsUp < Test::Unit::TestCase
     item = Item.create(:name => 'XBOX', :description => 'XBOX console')
     item_not_included = Item.create(:name => 'Playstation', :description => 'Playstation console')
 
-    assert_not_nil user.vote_for(item)
+    refute_nil user.vote_for(item)
 
     if ActiveRecord::Base.connection.adapter_name == 'MySQL'
       assert(Item.plusminus_tally.having('vote_count > 0').include?(item))
@@ -420,8 +420,8 @@ class TestThumbsUp < Test::Unit::TestCase
     item2 = Item.create(:name => 'Playstation', :description => 'Playstation console')
     item3 = Item.create(:name => 'Wii', :description => 'Wii console')
 
-    assert_not_nil user.vote_for(item1)
-    assert_not_nil user.vote_against(item2)
+    refute_nil user.vote_for(item1)
+    refute_nil user.vote_against(item2)
 
     assert_equal [1, 0, 0], Item.plusminus_tally(:separate_updown => true).map(&:up).map(&:to_i)
   end
@@ -432,8 +432,8 @@ class TestThumbsUp < Test::Unit::TestCase
     item2 = Item.create(:name => 'Playstation', :description => 'Playstation console')
     item3 = Item.create(:name => 'Wii', :description => 'Wii console')
 
-    assert_not_nil user.vote_for(item1)
-    assert_not_nil user.vote_against(item2)
+    refute_nil user.vote_for(item1)
+    refute_nil user.vote_against(item2)
 
     assert_equal [0, 0, 1], Item.plusminus_tally(:separate_updown => true).map(&:down).map(&:to_i)
   end
@@ -444,8 +444,8 @@ class TestThumbsUp < Test::Unit::TestCase
     item2 = Item.create(:name => 'Playstation', :description => 'Playstation console')
     item3 = Item.create(:name => 'Wii', :description => 'Wii console')
 
-    assert_not_nil user.vote_for(item1)
-    assert_not_nil user.vote_against(item2)
+    refute_nil user.vote_for(item1)
+    refute_nil user.vote_against(item2)
 
     assert_equal [1, 0, -1], Item.plusminus_tally.map(&:plusminus_tally).map(&:to_i)
   end
@@ -454,7 +454,7 @@ class TestThumbsUp < Test::Unit::TestCase
     user1 = User.create(:name => 'david')
     item = Item.create(:name => 'Playstation', :description => 'Playstation console')
 
-    assert_not_nil user1.vote_for(item)
+    refute_nil user1.vote_for(item)
 
     # https://github.com/rails/rails/issues/1718
     assert_equal 1, Item.plusminus_tally[0].vote_count.to_i
@@ -466,8 +466,8 @@ class TestThumbsUp < Test::Unit::TestCase
     user2 = User.create(:name => 'john')
     item = Item.create(:name => 'Playstation', :description => 'Playstation console')
 
-    assert_not_nil user1.vote_against(item)
-    assert_not_nil user2.vote_against(item)
+    refute_nil user1.vote_against(item)
+    refute_nil user2.vote_against(item)
 
     # https://github.com/rails/rails/issues/1718
     assert_equal 2, Item.plusminus_tally[0].vote_count.to_i
@@ -481,10 +481,10 @@ class TestThumbsUp < Test::Unit::TestCase
     item_for = Item.create(:name => 'XBOX', :description => 'XBOX console')
     item_against = Item.create(:name => 'Playstation', :description => 'Playstation console')
 
-    assert_not_nil user1.vote_for(item_for)
-    assert_not_nil user1.vote_for(item_twice_for)
-    assert_not_nil user2.vote_for(item_twice_for)
-    assert_not_nil user1.vote_against(item_against)
+    refute_nil user1.vote_for(item_for)
+    refute_nil user1.vote_for(item_twice_for)
+    refute_nil user2.vote_for(item_twice_for)
+    refute_nil user1.vote_against(item_against)
 
     assert_equal item_twice_for, Item.plusminus_tally[0]
     assert_equal item_for, Item.plusminus_tally[1]
@@ -504,8 +504,8 @@ class TestThumbsUp < Test::Unit::TestCase
     item_for = Item.create(:name => 'XBOX', :description => 'XBOX console')
     item_against = Item.create(:name => 'Playstation', :description => 'Playstation console')
 
-    assert_not_nil user.vote_for(item_for)
-    assert_not_nil user.vote_against(item_against)
+    refute_nil user.vote_for(item_for)
+    refute_nil user.vote_against(item_against)
 
     assert_equal item_for, Item.plusminus_tally.reorder('plusminus_tally ASC')[1]
     assert_equal item_against, Item.plusminus_tally.reorder('plusminus_tally ASC')[0]
@@ -524,7 +524,7 @@ class TestThumbsUp < Test::Unit::TestCase
   end
 
   def test_plusminus_tally_count
-    Item.plusminus_tally.except(:order).count
+    Item.plusminus_tally.except(:order).to_a.count
   end
 
   def test_plusminus_tally_any

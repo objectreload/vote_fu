@@ -33,10 +33,13 @@ end
 task :test_all_databases do
   # Test MySQL, Postgres and SQLite3
   ENV['DB'] = 'mysql'
+  puts "Testing MySQL..."
   Rake::Task['test'].execute
   ENV['DB'] = 'postgres'
+  puts "Testing Postgres..."
   Rake::Task['test'].execute
   ENV['DB'] = 'sqlite3'
+  puts "Testing SQLite3..."
   Rake::Task['test'].execute
 end
 

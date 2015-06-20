@@ -1,6 +1,6 @@
 require 'simplecov'
+require 'minitest/autorun'
 SimpleCov.start
-require 'test/unit'
 
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
@@ -64,7 +64,7 @@ ActiveRecord::Schema.define do
     t.boolean    :vote,     :default => false
     t.references :voteable, :polymorphic => true, :null => false
     t.references :voter,    :polymorphic => true
-    t.timestamps
+    t.timestamps :null => false
   end
 
   add_index :votes, [:voter_id, :voter_type]
@@ -75,7 +75,7 @@ ActiveRecord::Schema.define do
 
   create_table :users, :force => true do |t|
     t.string :name
-    t.timestamps
+    t.timestamps :null => false
   end
 
   create_table :items, :force => true do |t|
@@ -92,7 +92,7 @@ ActiveRecord::Schema.define do
 
   create_table :user_customs, :force => true do |t|
     t.string :name
-    t.timestamps
+    t.timestamps :null => false
   end
 
   create_table :item_customs, :force => true do |t|
@@ -149,7 +149,7 @@ class User < ActiveRecord::Base
   ThumbsUp.configuration.voter_relationship_name = :votes
   acts_as_voter
   has_many :items
-  has_karma(:items)
+  has_karma :items
 
   def self.weighted_has_karma
     self.karmic_objects = nil
@@ -182,7 +182,4 @@ class UserCustom < ActiveRecord::Base
   acts_as_voter
   has_many :items
   has_karma :items
-end
-
-class Test::Unit::TestCase
 end
