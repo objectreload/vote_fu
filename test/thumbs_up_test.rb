@@ -532,6 +532,7 @@ class TestThumbsUp < Minitest::Test
   end
 
   def test_karma
+    User.default_karma
     users = (0..1).map{ |u| User.create(:name => "User #{u}") }
     items = (0..1).map{ |u| users[0].items.create(:name => "Item #{u}", :description => "Item #{u}") }
     users.each{ |u| items.each { |i| u.vote_for(i) } }
