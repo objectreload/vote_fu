@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.description = 'ThumbsUp provides dead-simple voting capabilities to ActiveRecord models with karma calculation, a la stackoverflow.com.'
   s.authors = ['Brady Bouchard', 'Peter Jackson', 'Cosmin Radoi', 'Bence Nagy', 'Rob Maddox', 'Wojciech Wnetrzak']
   s.email = ['brady@thewellinspired.com']
-  s.files = Dir.glob('{lib,rails,test}/**/*') + %w(CHANGELOG.md Gemfile MIT-LICENSE README.md Rakefile)
+  s.files = Dir.glob('{lib,rails,test}/**/*') + %w(CHANGELOG.md Gemfile LICENSE README.md Rakefile)
   s.require_paths = ['lib']
 
   s.add_runtime_dependency('activerecord', '~> 4.2.x')
