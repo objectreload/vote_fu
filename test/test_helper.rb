@@ -151,6 +151,11 @@ class User < ActiveRecord::Base
   has_many :items
   has_karma :items
 
+  def self.default_karma
+    self.karmic_objects = nil
+    has_karma :items, :weight => 1
+  end
+
   def self.weighted_has_karma
     self.karmic_objects = nil
     has_karma :items, :weight => [ 10, 15 ]
