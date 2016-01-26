@@ -4,3 +4,5 @@ rvm:
 before_script:
   - "mysql -e 'create database thumbs_up_test;'"
   - "bundle update"
+before_install:
+  - gem update bundler
