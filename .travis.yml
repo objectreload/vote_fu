@@ -1,8 +1,9 @@
 language: ruby
 rvm:
-  - 1.9.3
-before_script:
-  - "mysql -e 'create database thumbs_up_test;'"
-  - "bundle update"
+  - 2.6.3
+services:
+  - mysql
 before_install:
+  - "mysql -e 'create database thumbs_up_test;'"
+  - bundle update
   - gem update bundler
